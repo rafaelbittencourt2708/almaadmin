@@ -2,60 +2,25 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(req: NextRequest) {
+export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  const supabase = createMiddlewareClient({ req: request, res });
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // If there's no session and the user is trying to access a protected route
-  if (!session && req.nextUrl.pathname !== '/auth') {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/auth';
+  // If user is not signed in and the current path is not /auth/login,
+  // redirect the user to /auth/login
+  if (!session && !request.nextUrl.pathname.startsWith('/auth/login')) {
+    const redirectUrl = new URL('/auth/login', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If there's a session, verify organization and role
-  if (session && req.nextUrl.pathname !== '/auth') {
-    try {
-      const { data, error } = await supabase
-        .from('organization_members')
-        .select(`
-          role,
-          organization:organizations!inner(type)
-        `)
-        .eq('user_id', session.user.id)
-        .eq('role', 'owner')
-        .single() as unknown as {
-          data: {
-            role: string;
-            organization: {
-              type: string;
-            };
-          } | null;
-          error: any;
-        };
-
-      if (error || !data || data.organization?.type !== 'matrix') {
-        // If verification fails, redirect to auth page
-        const redirectUrl = req.nextUrl.clone();
-        redirectUrl.pathname = '/auth';
-        return NextResponse.redirect(redirectUrl);
-      }
-    } catch (error) {
-      // If there's an error checking authorization, redirect to auth page
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/auth';
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  // If there's a session and the user is on the auth page
-  if (session && req.nextUrl.pathname === '/auth') {
-    const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/';
+  // If user is signed in and the current path is /auth/login,
+  // redirect the user to /
+  if (session && request.nextUrl.pathname.startsWith('/auth/login')) {
+    const redirectUrl = new URL('/', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -64,4 +29,4 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+}

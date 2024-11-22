@@ -1,9 +1,9 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { NavBar } from '@/components/nav-bar';
-import { AuthProvider } from '@/contexts/auth-context';
-import { Toaster } from '@/components/ui/sonner';
+import { NavBarWrapper } from 'components/nav-bar-wrapper';
+import { AuthProvider } from 'contexts/auth-context';
+import { Toaster } from 'components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <NavBar />
+          <NavBarWrapper />
           <main className="container mx-auto p-4 md:p-10">
             {children}
           </main>
