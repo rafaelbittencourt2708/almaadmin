@@ -1,7 +1,13 @@
 import { supabase } from './supabase';
 
+interface OrganizationResponse {
+  role: string;
+  organization: {
+    type: string;
+  };
+}
+
 export async function checkUserAuthorization(userId: string) {
-  // Check if user is part of a matrix organization as an owner
   const { data, error } = await supabase
     .from('organization_members')
     .select(`
@@ -10,7 +16,10 @@ export async function checkUserAuthorization(userId: string) {
     `)
     .eq('user_id', userId)
     .eq('role', 'owner')
-    .single();
+    .single() as unknown as {
+      data: OrganizationResponse | null;
+      error: any;
+    };
 
   if (error) {
     throw new Error('Failed to verify user authorization');

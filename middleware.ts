@@ -24,11 +24,19 @@ export async function middleware(req: NextRequest) {
         .from('organization_members')
         .select(`
           role,
-          organization:organizations(type)
+          organization:organizations!inner(type)
         `)
         .eq('user_id', session.user.id)
         .eq('role', 'owner')
-        .single();
+        .single() as unknown as {
+          data: {
+            role: string;
+            organization: {
+              type: string;
+            };
+          } | null;
+          error: any;
+        };
 
       if (error || !data || data.organization?.type !== 'matrix') {
         // If verification fails, redirect to auth page
