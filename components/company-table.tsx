@@ -19,7 +19,7 @@ import {
 } from "./ui/table";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "lib/supabase";
 
 interface Company {
   id: number;
@@ -36,11 +36,7 @@ export function CompanyTable() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    fetchCompanies();
-  }, [page]);
-
-  async function fetchCompanies() {
+  const fetchCompanies = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -67,7 +63,11 @@ export function CompanyTable() {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [page]);
 
   if (error) {
     return (
